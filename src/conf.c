@@ -136,6 +136,8 @@ static void config__init_reload(struct mosquitto__config *config)
 		config->listeners[i].security_options.auto_id_prefix_len = 0;
 	}
 
+	config->nuntilpublish = 1;
+
 	config->local_only = true;
 	config->allow_duplicate_messages = false;
 
@@ -253,7 +255,6 @@ void config__cleanup(struct mosquitto__config *config)
 #ifdef WITH_BRIDGE
 	int j;
 #endif
-
 	mosquitto__free(config->clientid_prefixes);
 	mosquitto__free(config->persistence_location);
 	mosquitto__free(config->persistence_file);
@@ -2198,6 +2199,13 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 #else
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: Websockets support not available.");
 #endif
+				}else if(!strcmp(token, "nuntilpublish")){
+					if(conf__parse_int(&token, "nuntilpublish", &tmp_int, saveptr)) return MOSQ_ERR_INVAL;
+					if(tmp_int < 1 ){
+						log__printf(NULL, MOSQ_LOG_WARNING, "Error: Jumlah nuntilpublish harus lebih tinggi dari 0");
+						return MOSQ_ERR_INVAL;
+					}
+					config->nuntilpublish = (uint8_t)tmp_int;
 				}else{
 					log__printf(NULL, MOSQ_LOG_ERR, "Error: Unknown configuration variable \"%s\".", token);
 					return MOSQ_ERR_INVAL;

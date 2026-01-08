@@ -60,6 +60,8 @@ Contributors:
 
 #include "utlist.h"
 
+#include "mod.h"
+
 static int subs__send(struct mosquitto__subleaf *leaf, const char *topic, uint8_t qos, int retain, struct mosquitto_msg_store *stored)
 {
 	bool client_retain;
@@ -658,6 +660,8 @@ int sub__remove(struct mosquitto *context, const char *sub, uint8_t *reason)
 
 int sub__messages_queue(const char *source_id, const char *topic, uint8_t qos, int retain, struct mosquitto_msg_store **stored)
 {
+
+
 	int rc = MOSQ_ERR_SUCCESS, rc2;
 	int rc_normal = MOSQ_ERR_NO_SUBSCRIBERS, rc_shared = MOSQ_ERR_NO_SUBSCRIBERS;
 	struct mosquitto__subhier *subhier;
@@ -668,11 +672,35 @@ int sub__messages_queue(const char *source_id, const char *topic, uint8_t qos, i
 
 	if(sub__topic_tokenise(topic, &local_topic, &split_topics, NULL)) return 1;
 
+
+	if (topic && strncmp(topic, "$SYS", 4) != 0) {
+		
+		store_publish(msgstore, topic, (*stored)->payload, (*stored)->payloadlen)+1;
+
+		size_t msgcount = store_get_message_count(msgstore, topic);
+
+		log__printf(NULL, MOSQ_LOG_DEBUG, "Message %d/%d", msgcount, db.config->nuntilpublish);
+
+		if(msgcount == db.config->nuntilpublish){
+			log__printf(NULL, MOSQ_LOG_DEBUG, "Sending messages...");
+
+			const char* msg = store_get_topic_messages_json(msgstore,topic);
+			(*stored)->payload = msg;
+			(*stored)->payloadlen = strlen(msg);
+	
+			store_delete_topic(msgstore,topic);
+		}else{
+			return rc;
+		}
+
+	} 
+
 	/* Protect this message until we have sent it to all
 	clients - this is required because websockets client calls
 	db__message_write(), which could remove the message if ref_count==0.
 	*/
 	db__msg_store_ref_inc(*stored);
+	
 
 	HASH_FIND(hh, db.normal_subs, split_topics[0], strlen(split_topics[0]), subhier);
 	if(subhier){

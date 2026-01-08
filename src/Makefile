@@ -79,10 +79,15 @@ OBJS=	mosquitto.o \
 		websockets.o \
 		will_delay.o \
 		will_mosq.o \
-		xtreport.o
+		xtreport.o \
+		mod.o
+
 
 mosquitto : ${OBJS}
-	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} $^ -o $@ $(BROKER_LDADD)
+	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} -lcjson $^ -o $@ $(BROKER_LDADD)
+
+mod.o : mod.c mosquitto_broker_internal.h
+	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
 mosquitto.o : mosquitto.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@

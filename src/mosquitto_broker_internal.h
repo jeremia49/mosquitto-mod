@@ -21,6 +21,7 @@ Contributors:
 #define MOSQUITTO_BROKER_INTERNAL_H
 
 #include "config.h"
+#include <stdint.h>
 #include <stdio.h>
 
 #ifdef WITH_WEBSOCKETS
@@ -305,6 +306,7 @@ struct mosquitto__config {
 	int bridge_count;
 #endif
 	struct mosquitto__security_options security_options;
+	uint8_t nuntilpublish;
 };
 
 

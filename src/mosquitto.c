@@ -54,6 +54,7 @@ Contributors:
 #include "memory_mosq.h"
 #include "misc_mosq.h"
 #include "util_mosq.h"
+#include "mod.h"
 
 struct mosquitto_db db;
 
@@ -72,6 +73,8 @@ int run;
 int allow_severity = LOG_INFO;
 int deny_severity = LOG_INFO;
 #endif
+
+SimpleMsgStore *msgstore = NULL;
 
 /* mosquitto shouldn't run as root.
  * This function will attempt to change to an unprivileged user and group if
@@ -453,6 +456,12 @@ static int pid__write(void)
 
 int main(int argc, char *argv[])
 {
+	msgstore = store_create();
+	if (!msgstore) {
+        fprintf(stderr, "Failed to create store\n");
+        return 1;
+    }
+
 	struct mosquitto__config config;
 #ifdef WITH_BRIDGE
 	int i;
@@ -544,12 +553,14 @@ int main(int argc, char *argv[])
 		rc = 1;
 		return rc;
 	}
-	log__printf(NULL, MOSQ_LOG_INFO, "mosquitto version %s starting", VERSION);
+	log__printf(NULL, MOSQ_LOG_INFO, "mosquitto version %s - Jeremia's MOD starting", VERSION);
 	if(db.config_file){
 		log__printf(NULL, MOSQ_LOG_INFO, "Config loaded from %s.", db.config_file);
 	}else{
 		log__printf(NULL, MOSQ_LOG_INFO, "Using default config.");
 	}
+
+	log__printf(NULL, MOSQ_LOG_INFO, "nuntilpublish : %d", db.config->nuntilpublish);
 
 	rc = mosquitto_security_module_init();
 	if(rc) return rc;
