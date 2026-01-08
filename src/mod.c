@@ -101,10 +101,12 @@ int store_publish(
 
     t->messages = new_msgs;
 
-    void *copy = malloc(payload_length);
+    void *copy = malloc(payload_length+1);
     if (!copy) return 0;
 
     memcpy(copy, payload, payload_length);
+            
+	((char *)copy)[payload_length] = '\0';
 
     t->messages[t->nmessage].data = copy;
     t->messages[t->nmessage].length = payload_length;

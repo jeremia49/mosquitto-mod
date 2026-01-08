@@ -675,7 +675,7 @@ int sub__messages_queue(const char *source_id, const char *topic, uint8_t qos, i
 
 	if (topic && strncmp(topic, "$SYS", 4) != 0) {
 		
-		store_publish(msgstore, topic, (*stored)->payload, (*stored)->payloadlen)+1;
+		store_publish(msgstore, topic, (*stored)->payload, (*stored)->payloadlen);
 
 		size_t msgcount = store_get_message_count(msgstore, topic);
 
